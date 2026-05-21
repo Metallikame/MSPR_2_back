@@ -47,8 +47,6 @@ jobs:
           context: functions/${{ matrix.function }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha,scope=${{ matrix.function }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.function }}
 
   update-manifests:
     name: Update image tags in k8s manifests
