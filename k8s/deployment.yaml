@@ -1,0 +1,262 @@
+---
+# ── Namespace ─────────────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cofrap
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openfaas-fn
+---
+# ── Secret PostgreSQL ─────────────────────────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: cofrap
+type: Opaque
+stringData:
+  POSTGRES_DB: cofrap
+  POSTGRES_USER: cofrap
+  POSTGRES_PASSWORD: cofrap_secure_pwd_2024
+---
+# ── Init SQL ──────────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: cofrap
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS users (
+      id        SERIAL PRIMARY KEY,
+      username  VARCHAR(255) UNIQUE NOT NULL,
+      password  TEXT,
+      mfa       TEXT,
+      gendate   BIGINT,
+      expired   INTEGER DEFAULT 0
+    );
+---
+# ── PostgreSQL Service (Headless) ─────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: cofrap
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None
+---
+# ── PostgreSQL StatefulSet ────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: cofrap
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: init-script
+          configMap:
+            name: postgres-init
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+# ── Secret DB pour les fonctions ─────────────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+  namespace: openfaas-fn
+type: Opaque
+stringData:
+  DB_HOST: "postgres-service.cofrap.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "cofrap"
+  DB_USER: "cofrap"
+  DB_PASSWORD: "cofrap_secure_pwd_2024"
+---
+# ── generate-password ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generate-password
+  namespace: openfaas-fn
+  labels:
+    app: generate-password
+    app.kubernetes.io/part-of: cofrap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: generate-password
+  template:
+    metadata:
+      labels:
+        app: generate-password
+    spec:
+      containers:
+        - name: generate-password
+          image: ghcr.io/metallikame/mspr_2_back/generate-password:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: generate-password
+  namespace: openfaas-fn
+spec:
+  selector:
+    app: generate-password
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# ── generate-2fa ──────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generate-2fa
+  namespace: openfaas-fn
+  labels:
+    app: generate-2fa
+    app.kubernetes.io/part-of: cofrap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: generate-2fa
+  template:
+    metadata:
+      labels:
+        app: generate-2fa
+    spec:
+      containers:
+        - name: generate-2fa
+          image: ghcr.io/metallikame/mspr_2_back/generate-2fa:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: generate-2fa
+  namespace: openfaas-fn
+spec:
+  selector:
+    app: generate-2fa
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# ── authenticate ──────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authenticate
+  namespace: openfaas-fn
+  labels:
+    app: authenticate
+    app.kubernetes.io/part-of: cofrap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authenticate
+  template:
+    metadata:
+      labels:
+        app: authenticate
+    spec:
+      containers:
+        - name: authenticate
+          image: ghcr.io/metallikame/mspr_2_back/authenticate:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authenticate
+  namespace: openfaas-fn
+spec:
+  selector:
+    app: authenticate
+  ports:
+    - port: 8080
+      targetPort: 8080

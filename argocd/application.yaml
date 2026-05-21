@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mspr2-backend
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.io
+  labels:
+    app.kubernetes.io/part-of: cofrap
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Metallikame/MSPR_2_back.git
+    targetRevision: main
+    path: k8s
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cofrap
+
+  syncPolicy:
+    automated:
+      prune: false      # Protection données PostgreSQL
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
