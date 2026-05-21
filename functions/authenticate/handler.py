@@ -15,6 +15,7 @@ def get_db_connection():
         password=os.environ.get("DB_PASSWORD", "cofrap"),
     )
 
+# test wf    
 
 SIX_MONTHS_SECONDS = 6 * 30 * 24 * 3600
 

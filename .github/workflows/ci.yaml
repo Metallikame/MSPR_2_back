@@ -2,7 +2,7 @@ name: CI — Build & Push Backend Functions
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "functions/**"
       - "k8s/**"
