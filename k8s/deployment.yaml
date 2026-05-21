@@ -232,6 +232,8 @@ spec:
       labels:
         app: authenticate
     spec:
+      imagePullSecrets:
+          - name: ghcr-secret
       containers:
         - name: authenticate
           image: ghcr.io/metallikame/mspr_2_back/authenticate:latest
