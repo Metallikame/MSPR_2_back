@@ -1,5 +1,4 @@
 FROM ghcr.io/openfaas/classic-watchdog:0.2.1 as watchdog
-
 FROM python:3.11-slim
 
 COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
@@ -18,9 +17,8 @@ USER app
 
 ENV fprocess="python handler.py"
 ENV cgi_headers="true"
-ENV mode="http"
+ENV mode="streaming"
 ENV upstream_url="http://127.0.0.1:5000"
 
 HEALTHCHECK --interval=3s CMD [ -e /tmp/.lock ] || exit 1
-
 CMD ["fwatchdog"]
