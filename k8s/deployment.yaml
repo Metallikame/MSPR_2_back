@@ -266,3 +266,53 @@ spec:
   ports:
     - port: 8080
       targetPort: 8080
+---
+# ── change-password ───────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: change-password
+  namespace: openfaas-fn
+  labels:
+    app: change-password
+    app.kubernetes.io/part-of: cofrap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: change-password
+  template:
+    metadata:
+      labels:
+        app: change-password
+    spec:
+      imagePullSecrets:
+          - name: ghcr-secret
+      containers:
+        - name: change-password
+          image: ghcr.io/metallikame/mspr_2_back/change-password:f890d35
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: change-password
+  namespace: openfaas-fn
+spec:
+  selector:
+    app: change-password
+  ports:
+    - port: 8080
+      targetPort: 8080

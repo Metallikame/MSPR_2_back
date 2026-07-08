@@ -15,7 +15,11 @@ MSPR_2_back/
 │   │   ├── handler.py
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
-│   └── authenticate/           # Vérifie login + mdp + code TOTP
+│   ├── authenticate/           # Vérifie login + mdp + code TOTP
+│   │   ├── handler.py
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   └── change-password/        # Modifie le mdp (auth requise)
 │       ├── handler.py
 │       ├── requirements.txt
 │       └── Dockerfile
@@ -56,6 +60,7 @@ git push origin main
 | `/function/generate-password` | POST | `{"username": "jean.dupont"}` |
 | `/function/generate-2fa` | POST | `{"username": "jean.dupont"}` |
 | `/function/authenticate` | POST | `{"username": "...", "password": "...", "totp_code": "123456"}` |
+| `/function/change-password` | POST | `{"username": "...", "current_password": "...", "totp_code": "123456", "new_password": "..."}` |
 
 ## Base de données
 

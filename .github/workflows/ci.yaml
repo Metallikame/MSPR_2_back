@@ -20,7 +20,7 @@ jobs:
       packages: write
     strategy:
       matrix:
-        function: [generate-password, generate-2fa, authenticate]
+        function: [generate-password, generate-2fa, authenticate, change-password]
 
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
       - name: Update image tags
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          for fn in generate-password generate-2fa authenticate; do
+          for fn in generate-password generate-2fa authenticate change-password; do
             sed -i "s|image: ghcr.io/metallikame/mspr_2_back/${fn}:.*|image: ghcr.io/metallikame/mspr_2_back/${fn}:${SHORT_SHA}|g" \
               k8s/deployment.yaml
           done
