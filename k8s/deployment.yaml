@@ -140,7 +140,7 @@ spec:
           - name: ghcr-secret
       containers:
         - name: generate-password
-          image: ghcr.io/metallikame/mspr_2_back/generate-password:f890d35
+          image: ghcr.io/metallikame/mspr_2_back/generate-password:a03f914
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -190,7 +190,7 @@ spec:
           - name: ghcr-secret
       containers:
         - name: generate-2fa
-          image: ghcr.io/metallikame/mspr_2_back/generate-2fa:f890d35
+          image: ghcr.io/metallikame/mspr_2_back/generate-2fa:a03f914
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -240,7 +240,7 @@ spec:
           - name: ghcr-secret
       containers:
         - name: authenticate
-          image: ghcr.io/metallikame/mspr_2_back/authenticate:f890d35
+          image: ghcr.io/metallikame/mspr_2_back/authenticate:a03f914
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -290,7 +290,7 @@ spec:
           - name: ghcr-secret
       containers:
         - name: change-password
-          image: ghcr.io/metallikame/mspr_2_back/change-password:f890d35
+          image: ghcr.io/metallikame/mspr_2_back/change-password:a03f914
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
